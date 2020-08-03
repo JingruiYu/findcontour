@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/findcontour",
-            "args": ["/home/yujr/mono_brid_semantic/Data/saic_new_birdview3/"],
+            "args": ["/home/yujr/findcontour/Data/saic_new_birdview3/"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
