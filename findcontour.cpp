@@ -133,16 +133,17 @@ void GetContour(cv::Mat &cannyContour, int cannyTreshold)
         }
     }
 
-    // imshow("old canny",canny_output);
+    imshow("old canny",canny_output);
 
-    vector< vector<Point> > vfront(361);
-    vector< vector<Point> > vleft(361);
-    vector< vector<Point> > vdown(361);
-    vector< vector<Point> > vright(361);
-    vector< vector<Point> > vvfront(181);
-    vector< vector<Point> > vvleft(181);
-    vector< vector<Point> > vvdown(181);
-    vector< vector<Point> > vvright(181);
+    vector< vector<Point> > vfront(37);
+    vector< vector<Point> > vleft(37);
+    vector< vector<Point> > vdown(37);
+    vector< vector<Point> > vright(37);
+    vector< vector<Point> > vvfront(37);
+    vector< vector<Point> > vvleft(37);
+    vector< vector<Point> > vvdown(37);
+    vector< vector<Point> > vvright(37);
+    int dt = 10;
 
     for (size_t i = 0; i < canny_output.cols; i++)
     {
@@ -169,8 +170,8 @@ void GetContour(cv::Mat &cannyContour, int cannyTreshold)
                     py = 175;
 
                     Point pt(j,i);
-                    int t = floor(atan2(pt.y-py,pt.x-px) * 180 / pi) + 180;
-                    int t2 = (floor(atan2(pt.y-py,pt.x-px) * 180 / pi) + 180) * 0.5;
+                    int t = (floor(atan2(pt.y-py,pt.x-px) * 180 / pi) + 180 + 5) / dt;
+                    int t2 = (floor(atan2(pt.y-py,pt.x-px) * 180 / pi) + 180) / dt;
                     vvleft[t2].push_back(pt);
                     vleft[t].push_back(pt); 
                 }
@@ -180,8 +181,8 @@ void GetContour(cv::Mat &cannyContour, int cannyTreshold)
                     py = 132;
                     
                     Point pt(j,i);
-                    int t = floor(atan2(pt.y-py,pt.x-px) * 180 / pi)+180;
-                    int t2 = (floor(atan2(pt.y-py,pt.x-px) * 180 / pi) + 180) * 0.5;
+                    int t = (floor(atan2(pt.y-py,pt.x-px) * 180 / pi) + 180 + 5) / dt;
+                    int t2 = (floor(atan2(pt.y-py,pt.x-px) * 180 / pi) + 180) / dt;
                     vvfront[t2].push_back(pt);
                     vfront[t].push_back(pt);
                 }
@@ -191,8 +192,8 @@ void GetContour(cv::Mat &cannyContour, int cannyTreshold)
                     py = 248;
 
                     Point pt(j,i);
-                    int t = floor(atan2(pt.y-py,pt.x-px) * 180 / pi)+180;
-                    int t2 = (floor(atan2(pt.y-py,pt.x-px) * 180 / pi) + 180) * 0.5;
+                    int t = (floor(atan2(pt.y-py,pt.x-px) * 180 / pi) + 180 + 5) / dt;
+                    int t2 = (floor(atan2(pt.y-py,pt.x-px) * 180 / pi) + 180) / dt;
                     vvdown[t2].push_back(pt);
                     vdown[t].push_back(pt);
                 }
@@ -202,8 +203,8 @@ void GetContour(cv::Mat &cannyContour, int cannyTreshold)
                     py = 176;
 
                     Point pt(j,i);
-                    int t = floor(atan2(pt.y-py,pt.x-px) * 180 / pi)+180;
-                    int t2 = (floor(atan2(pt.y-py,pt.x-px) * 180 / pi) + 180) * 0.5;
+                    int t = (floor(atan2(pt.y-py,pt.x-px) * 180 / pi) + 180 + 5) / dt;
+                    int t2 = (floor(atan2(pt.y-py,pt.x-px) * 180 / pi) + 180) / dt;
                     vvright[t2].push_back(pt);
                     vright[t].push_back(pt);
                 }
@@ -211,11 +212,37 @@ void GetContour(cv::Mat &cannyContour, int cannyTreshold)
         }
     }
 
-
+    
 
 #ifdef Filter
-    int t1 = 40;
-    int t2 = 40;
+    int t1 = 100;
+    int t2 = 100;
+
+    for (size_t i = 0; i < vvright.size(); i++)
+    {
+        cv::Mat checkAngle = Mat::zeros( canny_output.size(), canny_output.type() );
+        
+        if (vvright[i].size() > t1)
+        {
+            cout << "vvright[" << i << "].size():" << vvright[i].size() << endl;
+            // cout << "vvright[" << i << "].size():" << vright[i].size() << endl;
+            for (size_t j = 0; j < vvright[i].size(); j++)
+            {
+                Point pt = vvright[i][j];
+
+                /* int px = 183;
+                int py = 118;
+                                
+                int t1 = floor(atan2(pt.y-py,pt.x-px) * 180 / pi)+180;
+                
+                cout << pt << " pt.y: " << pt.y << " t1: " << t1 << " i: " << i << endl; */
+                checkAngle.at<uchar>(pt.y,pt.x) = 255;
+            }
+            imshow("angle",checkAngle);
+            waitKey(0); 
+        }
+    }
+
     for (size_t i = 0; i < vvfront.size(); i++)
     {
         if (vvleft[i].size() > t1)
@@ -255,7 +282,6 @@ void GetContour(cv::Mat &cannyContour, int cannyTreshold)
         }
     } 
 
-
     for (size_t i = 0; i < vfront.size(); i++)
     {
         if (vleft[i].size() > t2)
@@ -293,26 +319,26 @@ void GetContour(cv::Mat &cannyContour, int cannyTreshold)
                 canny_output.at<uchar>(pt.y,pt.x) = 0;
             }
         }
-    }
+    } 
 
-    // imshow("new canny",canny_output);
+    imshow("new canny",canny_output);
 #endif
     
 
 #ifdef DEBUG  
-    // imshow("new canny",canny_output);
+    imshow("new canny",canny_output);
     // waitKey(0);
 
-    for (size_t i = 0; i < vvright.size(); i++)
+    for (size_t i = 0; i < vvfront.size(); i++)
     {
         cv::Mat checkAngle = Mat::zeros( canny_output.size(), canny_output.type() );
         
-        if (vvright[i].size() != 0)
+        if (vvfront[i].size() != 0)
         {
-            cout << "vvfront[" << i << "].size():" << vvright[i].size() << endl;
-            for (size_t j = 0; j < vvright[i].size(); j++)
+            cout << "vvfront[" << i << "].size():" << vvfront[i].size() << endl;
+            for (size_t j = 0; j < vvfront[i].size(); j++)
             {
-                Point pt = vvright[i][j];
+                Point pt = vvfront[i][j];
 
                 /* int px = 183;
                 int py = 118;
@@ -349,17 +375,42 @@ void GetContour(cv::Mat &cannyContour, int cannyTreshold)
         
         // cannyContour = Mat::zeros( canny_output.size(), CV_8UC3 );
         Scalar color = Scalar( 255, 255, 255 );
-        drawContours( cannyContour, contours, i, color, CV_FILLED, 8, hierarchy, 0, Point() );
+        drawContours( cannyContour, contours, i, color, 1, 8, hierarchy, 0, Point() );
 
         cout << "contour size is : " << contours[i].size() << endl;
         
     }
     
-    //imshow( "cannyContour", cannyContour );
-    // waitKey(0);
+    imshow( "cannyContour", cannyContour );
+    waitKey(0);
 #endif
 }
 
+void together(cv::Mat &canny, cv::Mat &free)
+{
+    // imshow("src",src);
+    // imshow("canny",canny);
+    // imshow("free",free);
+    
+    for (size_t i = 0; i < src.cols; i++)
+    {
+        for (size_t j = 0; j < src.rows; j++)
+        {
+            cv::Vec3b tmp  = canny.at<cv::Vec3b>(i,j);
+            uchar regoin_x = tmp[0];
+            
+            if (regoin_x > 250)
+                src.at<cv::Vec3b>(i,j) = cv::Vec3b(255,0,0);
+            
+            tmp = free.at<cv::Vec3b>(i,j);
+            uchar regoin_y = tmp[0];
+            if (regoin_y > 250)
+                src.at<cv::Vec3b>(i,j) = cv::Vec3b(0,255,0);
+        }
+    }
+    // imshow("srcNew",src);
+    // waitKey(0);
+}
 
 int main(int argc, char const *argv[])
 {
@@ -375,7 +426,7 @@ int main(int argc, char const *argv[])
 
     for (size_t i = 0; i < vstrBirdviewFilenames.size(); i++)
 	{	
-        cout << "i: " << i << endl;
+        cout << "i: " << string(argv[1])+"/"+vstrBirdviewFilenames[i] << endl;
 		/// 装载图像
 		src = imread(string(argv[1])+"/"+vstrBirdviewFilenames[i],CV_LOAD_IMAGE_UNCHANGED);
 		mask = imread(string(argv[1])+"/"+vstrBirdviewMaskFilenames[i],CV_LOAD_IMAGE_UNCHANGED);
