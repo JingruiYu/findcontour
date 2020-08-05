@@ -24,6 +24,7 @@ bool findThreshold = false;
 
 void LoadDataset(const string &strFile, vector<string> &vstrImageSaveFilenames, vector<string> &vstrBirdviewFilenames, 
                 vector<string> &vstrBirdviewMaskFilenames, vector<string> &vstrBirdviewALLFilenames,
+                vector<string> &vstrCannyFilenames, vector<string> &vstrFreeFilenames,
                 vector<cv::Vec3d> &vodomPose, vector<double> &vTimestamps)
 {
     ifstream f;
@@ -49,6 +50,8 @@ void LoadDataset(const string &strFile, vector<string> &vstrImageSaveFilenames, 
             vstrBirdviewFilenames.push_back("birdview/"+image);
             vstrBirdviewMaskFilenames.push_back("mask/"+image);
             vstrBirdviewALLFilenames.push_back("all/"+image);
+            vstrCannyFilenames.push_back("contourFromCanny/"+image);
+            vstrFreeFilenames.push_back("contourfromFreespace/"+image);
         }
     }
 }
@@ -279,12 +282,12 @@ void together(cv::Mat &canny, cv::Mat &free)
             uchar regoin_x = tmp[0];
             
             if (regoin_x > 250)
-                src.at<cv::Vec3b>(i,j) = cv::Vec3b(255,0,0);
+                src.at<float>(i,j) = 255;
             
             tmp = free.at<cv::Vec3b>(i,j);
             uchar regoin_y = tmp[0];
             if (regoin_y > 250)
-                src.at<cv::Vec3b>(i,j) = cv::Vec3b(0,255,0);
+                src.at<float>(i,j) = 255;
         }
     }
     // imshow("srcNew",src);
@@ -293,13 +296,13 @@ void together(cv::Mat &canny, cv::Mat &free)
 
 int main(int argc, char const *argv[])
 {
-    vector<string> vstrBirdviewFilenames, vstrBirdviewMaskFilenames, vstrImageSaveFilenames, vstrBirdviewALLFilenames;
+    vector<string> vstrBirdviewFilenames, vstrBirdviewMaskFilenames, vstrImageSaveFilenames, vstrBirdviewALLFilenames, vstrCannyFilenames, vstrFreeFilenames;
 	vector<double> vTimestamps;
 	vector<cv::Vec3d> vodomPose;
 
 	string DataStrFile = string(argv[1])+"/associate.txt";
 	
-    LoadDataset(DataStrFile, vstrImageSaveFilenames, vstrBirdviewFilenames, vstrBirdviewMaskFilenames, vstrBirdviewALLFilenames, vodomPose, vTimestamps);
+    LoadDataset(DataStrFile, vstrImageSaveFilenames, vstrBirdviewFilenames, vstrBirdviewMaskFilenames, vstrBirdviewALLFilenames, vstrCannyFilenames, vstrFreeFilenames, vodomPose, vTimestamps);
 
     regoin = imread(string(argv[1])+"/regoin.jpg",CV_LOAD_IMAGE_UNCHANGED);
 
@@ -309,27 +312,36 @@ int main(int argc, char const *argv[])
 		/// 装载图像
 		src = imread(string(argv[1])+"/"+vstrBirdviewFilenames[i],CV_LOAD_IMAGE_UNCHANGED);
 		mask = imread(string(argv[1])+"/"+vstrBirdviewMaskFilenames[i],CV_LOAD_IMAGE_UNCHANGED);
+        cv::Mat canny = imread(string(argv[1])+"/"+vstrCannyFilenames[i],CV_LOAD_IMAGE_UNCHANGED);
+		cv::Mat free = imread(string(argv[1])+"/"+vstrFreeFilenames[i],CV_LOAD_IMAGE_UNCHANGED);
 		
-        cvtColor( src, src_gray, CV_BGR2GRAY );
-
-        if (findThreshold)
+        if (1)
         {
-            namedWindow( window_name, CV_WINDOW_AUTOSIZE );
-            /// 创建trackbar
-            createTrackbar( "Min Threshold:", window_name, &lowThreshold, max_lowThreshold, CannyThreshold );
-            /// 显示图像
-            CannyThreshold(0, 0); 
-            waitKey(0);
+            src = Mat::zeros(src.size(),CV_32F);
+            together(canny,free);
+            imwrite( string(argv[1])+"/"+vstrImageSaveFilenames[i],src);
+            cvtColor( src, src_gray, CV_BGR2GRAY );
         }
         else
         {
-            cv::Mat cannyContour;
-            int cannyTreshold = 50;
-            GetContour(cannyContour,cannyTreshold);    
+            if (findThreshold)
+            {
+                namedWindow( window_name, CV_WINDOW_AUTOSIZE );
+                /// 创建trackbar
+                createTrackbar( "Min Threshold:", window_name, &lowThreshold, max_lowThreshold, CannyThreshold );
+                /// 显示图像
+                CannyThreshold(0, 0); 
+                waitKey(0);
+            }
+            else
+            {
+                cv::Mat cannyContour;
+                int cannyTreshold = 50;
+                GetContour(cannyContour,cannyTreshold);    
 
-            imwrite( string(argv[1])+"/"+vstrImageSaveFilenames[i],cannyContour);
-        }
-               
+                imwrite( string(argv[1])+"/"+vstrImageSaveFilenames[i],cannyContour);
+            } 
+        }      
         // waitKey(0);
 	}
 
